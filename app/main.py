@@ -1,23 +1,16 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from dotenv import load_dotenv
-import os 
+from fastapi import FastAPI, Request, Depends
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse, RedirectResponse
 
-load_dotenv()
+from app.controllers import auth_controller
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+app = FastAPI(title="Sistema estoque")
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
-Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+#configurar o fastapi para servir os arquivos estatico (CSS, JS, Imagens)
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-class Base(DeclarativeBase):
-    pass
-def get_db():
-    db = Session()
-    try:
-        yield db
-    finally:
-        db.close()
+templates = Jinja2Templates(directory="app/templates")
+
+#Inclui os routers dos controles
+app.include_router(auth_controller.router)
